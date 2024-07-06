@@ -84,7 +84,7 @@
     </div>
 
     <script>
-        const contractAddress = '0x356d517F8f5f30F01b6f905601C373b52FD29117'; // Reemplaza con la dirección de tu contrato
+        const contractAddress = '0x959d3c0E7A3B146D7a1517E3B41ffE63960c79b0'; // Reemplaza con la dirección de tu contrato
         const contractABI = [
             {
                 "inputs": [
@@ -147,7 +147,16 @@
                         .on('receipt', (receipt) => {
                             alert('Token created successfully!');
                             hideCreateTokenModal();
-                            tokens.push({ address: receipt.events.TokenCreated.returnValues.tokenAddress, name, symbol, website, telegram, twitter, additionalLinks });
+                            tokens.push({ 
+                                address: receipt.events.TokenCreated.returnValues.tokenAddress, 
+                                name, 
+                                symbol, 
+                                website, 
+                                telegram, 
+                                twitter, 
+                                additionalLinks, 
+                                lastActivity: Date.now() // Add timestamp to track last activity
+                            });
                             renderTokenList();
                         })
                         .on('error', (error) => {
