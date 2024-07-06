@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Token Creator</title>
+    <title>Token Platform</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -14,83 +14,111 @@
         h1 {
             text-align: center;
         }
-        form {
+        #tokenList {
             max-width: 600px;
             margin: 20px auto;
-            padding: 20px;
+        }
+        .token-item {
             background-color: #fff;
+            padding: 10px;
+            margin: 10px 0;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        input {
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        #createTokenModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        #createTokenForm {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        input, textarea {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
             border: 1px solid #ccc;
             border-radius: 4px;
         }
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #218838;
-        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
 </head>
 <body>
-    <h1>Create Your Token</h1>
-    <form id="tokenForm">
-        <input type="text" id="name" placeholder="Name" required />
-        <input type="text" id="symbol" placeholder="Symbol" required />
-        <input type="number" id="initialSupply" placeholder="Initial Supply" required />
-        <button type="submit">Create Token</button>
-    </form>
+    <h1>Token Platform</h1>
+    <button onclick="showCreateTokenModal()">Create Token</button>
+    <div id="tokenList"></div>
+
+    <div id="createTokenModal">
+        <form id="createTokenForm">
+            <input type="text" id="name" placeholder="Name" required />
+            <input type="text" id="symbol" placeholder="Symbol" required />
+            <input type="number" id="initialSupply" placeholder="Initial Supply" required />
+            <input type="text" id="website" placeholder="Website" />
+            <input type="text" id="telegram" placeholder="Telegram" />
+            <input type="text" id="twitter" placeholder="Twitter" />
+            <textarea id="additionalLinks" placeholder="Additional Links (comma separated)"></textarea>
+            <input type="number" id="initialPurchase" placeholder="Initial Purchase" />
+            <button type="submit">Create Token</button>
+            <button type="button" onclick="hideCreateTokenModal()">Cancel</button>
+        </form>
+    </div>
+
     <script>
-        const contractAddress = '0xB57324f98D8366dc7256C5556b9d17FEc1df4D1B'; // Replace with your TokenFactory contract address
+        const contractAddress = '0xB57324f98D8366dc7256C5556b9d17FEc1df4D1B'; // Reemplaza con la dirección de tu contrato
         const contractABI = [
             {
                 "inputs": [
-                    {
-                        "internalType": "string",
-                        "name": "name",
-                        "type": "string"
-                    },
-                    {
-                        "internalType": "string",
-                        "name": "symbol",
-                        "type": "string"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "initialSupply",
-                        "type": "uint256"
-                    }
+                    {"internalType": "string", "name": "name", "type": "string"},
+                    {"internalType": "string", "name": "symbol", "type": "string"},
+                    {"internalType": "uint256", "name": "initialSupply", "type": "uint256"},
+                    {"internalType": "string", "name": "website", "type": "string"},
+                    {"internalType": "string", "name": "telegram", "type": "string"},
+                    {"internalType": "string", "name": "twitter", "type": "string"},
+                    {"internalType": "string[]", "name": "additionalLinks", "type": "string[]"},
+                    {"internalType": "uint256", "name": "initialPurchase", "type": "uint256"}
                 ],
                 "name": "createToken",
                 "outputs": [],
-                "stateMutability": "nonpayable",
+                "stateMutability": "payable",
                 "type": "function"
             },
             {
                 "anonymous": false,
-                "inputs": [
-                    {
-                        "indexed": false,
-                        "internalType": "address",
-                        "name": "tokenAddress",
-                        "type": "address"
-                    }
-                ],
+                "inputs": [{"indexed": false, "internalType": "address", "name": "tokenAddress", "type": "address"}],
                 "name": "TokenCreated",
                 "type": "event"
             }
         ];
+
+        let tokens = [];
+
+        async function showCreateTokenModal() {
+            document.getElementById('createTokenModal').style.display = 'flex';
+        }
+
+        async function hideCreateTokenModal() {
+            document.getElementById('createTokenModal').style.display = 'none';
+        }
 
         async function handleSubmit(event) {
             event.preventDefault();
@@ -98,6 +126,11 @@
             const name = document.getElementById('name').value;
             const symbol = document.getElementById('symbol').value;
             const initialSupply = document.getElementById('initialSupply').value;
+            const website = document.getElementById('website').value;
+            const telegram = document.getElementById('telegram').value;
+            const twitter = document.getElementById('twitter').value;
+            const additionalLinks = document.getElementById('additionalLinks').value.split(',');
+            const initialPurchase = document.getElementById('initialPurchase').value;
 
             if (typeof window.ethereum !== 'undefined') {
                 const web3 = new Web3(window.ethereum);
@@ -107,10 +140,13 @@
                     const account = accounts[0];
                     const contract = new web3.eth.Contract(contractABI, contractAddress);
 
-                    contract.methods.createToken(name, symbol, initialSupply)
-                        .send({ from: account })
+                    contract.methods.createToken(name, symbol, initialSupply, website, telegram, twitter, additionalLinks, initialPurchase)
+                        .send({ from: account, value: initialPurchase })
                         .on('receipt', (receipt) => {
                             alert('Token created successfully!');
+                            hideCreateTokenModal();
+                            tokens.push({ address: receipt.events.TokenCreated.returnValues.tokenAddress, name, symbol, website, telegram, twitter, additionalLinks });
+                            renderTokenList();
                         })
                         .on('error', (error) => {
                             console.error(error);
@@ -124,7 +160,34 @@
             }
         }
 
-        document.getElementById('tokenForm').addEventListener('submit', handleSubmit);
+        document.getElementById('createTokenForm').addEventListener('submit', handleSubmit);
+
+        function renderTokenList() {
+            const tokenList = document.getElementById('tokenList');
+            tokenList.innerHTML = '';
+
+            tokens.sort((a, b) => b.lastActivity - a.lastActivity);
+
+            tokens.forEach(token => {
+                const tokenItem = document.createElement('div');
+                tokenItem.className = 'token-item';
+                tokenItem.innerHTML = `
+                    <h2>${token.name} (${token.symbol})</h2>
+                    <p>Website: <a href="${token.website}" target="_blank">${token.website}</a></p>
+                    <p>Telegram: <a href="${token.telegram}" target="_blank">${token.telegram}</a></p>
+                    <p>Twitter: <a href="${token.twitter}" target="_blank">${token.twitter}</a></p>
+                    ${token.additionalLinks.map(link => `<p>Link: <a href="${link.trim()}" target="_blank">${link.trim()}</a></p>`).join('')}
+                    <button onclick="showTokenDetails('${token.address}')">Details</button>
+                `;
+                tokenList.appendChild(tokenItem);
+            });
+        }
+
+        function showTokenDetails(address) {
+            // Aquí deberías implementar la funcionalidad para mostrar los detalles del token y permitir la compra/venta
+            // Esta función debería abrir un modal o navegar a una nueva página con los detalles del token
+            alert('Token details for: ' + address);
+        }
     </script>
 </body>
 </html>
