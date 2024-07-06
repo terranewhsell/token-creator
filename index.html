@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Creator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+        }
+        form {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+</head>
+<body>
+    <h1>Create Your Token</h1>
+    <form id="tokenForm">
+        <input type="text" id="name" placeholder="Name" required />
+        <input type="text" id="symbol" placeholder="Symbol" required />
+        <input type="number" id="initialSupply" placeholder="Initial Supply" required />
+        <button type="submit">Create Token</button>
+    </form>
+    <script>
+        const contractAddress = 'YOUR_CONTRACT_ADDRESS'; // Replace with your TokenFactory contract address
+        const contractABI = [
+            {
+                "inputs": [
+                    {
+                        "internalType": "string",
+                        "name": "name",
+                        "type": "string"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "symbol",
+                        "type": "string"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "initialSupply",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "createToken",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": false,
+                        "internalType": "address",
+                        "name": "tokenAddress",
+                        "type": "address"
+                    }
+                ],
+                "name": "TokenCreated",
+                "type": "event"
+            }
+        ];
+
+        async function handleSubmit(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('name').value;
+            const symbol = document.getElementById('symbol').value;
+            const initialSupply = document.getElementById('initialSupply').value;
+
+            if (typeof window.ethereum !== 'undefined') {
+                const web3 = new Web3(window.ethereum);
+                try {
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    const accounts = await web3.eth.getAccounts();
+                    const account = accounts[0];
+                    const contract = new web3.eth.Contract(contractABI, contractAddress);
+
+                    contract.methods.createToken(name, symbol, initialSupply)
+                        .send({ from: account })
+                        .on('receipt', (receipt) => {
+                            alert('Token created successfully!');
+                        })
+                        .on('error', (error) => {
+                            console.error(error);
+                            alert('An error occurred while creating the token.');
+                        });
+                } catch (error) {
+                    console.error(error);
+                }
+            } else {
+                alert('Please install MetaMask to use this feature.');
+            }
+        }
+
+        document.getElementById('tokenForm').addEventListener('submit', handleSubmit);
+    </script>
+</body>
+</html>
