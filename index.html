@@ -72,19 +72,19 @@
         <form id="createTokenForm">
             <input type="text" id="name" placeholder="Name" required />
             <input type="text" id="symbol" placeholder="Symbol" required />
-            <input type="number" id="initialSupply" placeholder="Initial Supply" required />
+            <input type="number" id="initialSupply" placeholder="Initial Supply" required step="any"/>
             <input type="text" id="website" placeholder="Website" />
             <input type="text" id="telegram" placeholder="Telegram" />
             <input type="text" id="twitter" placeholder="Twitter" />
             <textarea id="additionalLinks" placeholder="Additional Links (comma separated)"></textarea>
-            <input type="number" id="initialPurchase" placeholder="Initial Purchase" />
+            <input type="number" id="initialPurchase" placeholder="Initial Purchase" step="any"/>
             <button type="submit">Create Token</button>
             <button type="button" onclick="hideCreateTokenModal()">Cancel</button>
         </form>
     </div>
 
     <script>
-        const contractAddress = '0xB57324f98D8366dc7256C5556b9d17FEc1df4D1B'; // Reemplaza con la dirección de tu contrato
+        const contractAddress = '0xYourContractAddressHere'; // Reemplaza con la dirección de tu contrato
         const contractABI = [
             {
                 "inputs": [
@@ -140,8 +140,10 @@
                     const account = accounts[0];
                     const contract = new web3.eth.Contract(contractABI, contractAddress);
 
-                    contract.methods.createToken(name, symbol, initialSupply, website, telegram, twitter, additionalLinks, initialPurchase)
-                        .send({ from: account, value: initialPurchase })
+                    const initialPurchaseInWei = web3.utils.toWei(initialPurchase.toString(), 'ether');
+
+                    contract.methods.createToken(name, symbol, initialSupply, website, telegram, twitter, additionalLinks, initialPurchaseInWei)
+                        .send({ from: account, value: initialPurchaseInWei })
                         .on('receipt', (receipt) => {
                             alert('Token created successfully!');
                             hideCreateTokenModal();
@@ -184,8 +186,6 @@
         }
 
         function showTokenDetails(address) {
-            // Aquí deberías implementar la funcionalidad para mostrar los detalles del token y permitir la compra/venta
-            // Esta función debería abrir un modal o navegar a una nueva página con los detalles del token
             alert('Token details for: ' + address);
         }
     </script>
