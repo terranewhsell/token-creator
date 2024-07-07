@@ -142,8 +142,11 @@
 
                     const initialPurchaseInWei = web3.utils.toWei(initialPurchase.toString(), 'ether');
 
+                    // Estimación de gas
+                    const gasEstimate = await contract.methods.createToken(name, symbol, initialSupply, website, telegram, twitter, additionalLinks, initialPurchaseInWei).estimateGas({ from: account, value: initialPurchaseInWei });
+
                     contract.methods.createToken(name, symbol, initialSupply, website, telegram, twitter, additionalLinks, initialPurchaseInWei)
-                        .send({ from: account, value: initialPurchaseInWei })
+                        .send({ from: account, value: initialPurchaseInWei, gas: gasEstimate })
                         .on('receipt', (receipt) => {
                             alert('Token created successfully!');
                             hideCreateTokenModal();
@@ -165,6 +168,7 @@
                         });
                 } catch (error) {
                     console.error(error);
+                    alert('An error occurred while creating the token.');
                 }
             } else {
                 alert('Please install MetaMask to use this feature.');
