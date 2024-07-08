@@ -147,7 +147,7 @@
 
                     const initialPurchaseInWei = web3.utils.toWei(initialPurchase.toString(), 'ether');
                     const tokenCreationFee = web3.utils.toWei('0.001', 'ether');
-                    const totalValue = web3.utils.toWei((initialPurchase + parseFloat(tokenCreationFee)).toString(), 'ether');
+                    const totalValue = web3.utils.toWei((initialPurchase + 0.001).toString(), 'ether');
 
                     // Estimación de gas
                     const gasEstimate = await contract.methods.createToken(name, symbol, initialSupply, website, telegram, twitter, additionalLinks, initialPurchaseInWei).estimateGas({ from: account, value: totalValue });
