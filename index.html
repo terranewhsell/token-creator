@@ -60,6 +60,10 @@
             border: 1px solid #ccc;
             border-radius: 4px;
         }
+        #percentageOutput {
+            font-weight: bold;
+            margin-top: 10px;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
 </head>
@@ -73,23 +77,34 @@
             <input type="text" id="name" placeholder="Name" required />
             <input type="text" id="symbol" placeholder="Symbol" required />
             <input type="number" id="initialSupply" placeholder="Initial Supply" required step="any"/>
+            <input type="text" id="website" placeholder="Website" />
+            <input type="text" id="telegram" placeholder="Telegram" />
+            <input type="text" id="twitter" placeholder="Twitter" />
+            <textarea id="additionalLinks" placeholder="Additional Links (comma separated)"></textarea>
+            <input type="number" id="ethAmount" placeholder="ETH Amount for Initial Purchase" required step="any" oninput="calculatePercentage()"/>
+            <div id="percentageOutput">Percentage of Supply: 0%</div>
             <button type="submit">Create Token</button>
             <button type="button" onclick="hideCreateTokenModal()">Cancel</button>
         </form>
     </div>
 
     <script>
-        const contractAddress = '0x34a26Aa6Ec5C1A55De0346bF3e94437a6765575C'; // Reemplaza con la dirección de tu contrato
+        const contractAddress = '0xf142dac7bfB5A44e27c1d07921822808055de932'; // Reemplaza con la dirección de tu contrato
         const contractABI = [
             {
                 "inputs": [
                     {"internalType": "string", "name": "name", "type": "string"},
                     {"internalType": "string", "name": "symbol", "type": "string"},
-                    {"internalType": "uint256", "name": "initialSupply", "type": "uint256"}
+                    {"internalType": "uint256", "name": "initialSupply", "type": "uint256"},
+                    {"internalType": "string", "name": "website", "type": "string"},
+                    {"internalType": "string", "name": "telegram", "type": "string"},
+                    {"internalType": "string", "name": "twitter", "type": "string"},
+                    {"internalType": "string[]", "name": "additionalLinks", "type": "string[]"},
+                    {"internalType": "uint256", "name": "ethAmount", "type": "uint256"}
                 ],
                 "name": "createToken",
-                "outputs": [{"internalType": "address", "name": "", "type": "address"}],
-                "stateMutability": "nonpayable",
+                "outputs": [],
+                "stateMutability": "payable",
                 "type": "function"
             },
             {
@@ -116,6 +131,11 @@
             const name = document.getElementById('name').value;
             const symbol = document.getElementById('symbol').value;
             const initialSupply = parseFloat(document.getElementById('initialSupply').value);
+            const website = document.getElementById('website').value;
+            const telegram = document.getElementById('telegram').value;
+            const twitter = document.getElementById('twitter').value;
+            const additionalLinks = document.getElementById('additionalLinks').value.split(',');
+            const ethAmount = parseFloat(document.getElementById('ethAmount').value);
 
             if (typeof window.ethereum !== 'undefined') {
                 const web3 = new Web3(window.ethereum);
@@ -125,8 +145,14 @@
                     const account = accounts[0];
                     const contract = new web3.eth.Contract(contractABI, contractAddress);
 
-                    contract.methods.createToken(name, symbol, initialSupply)
-                        .send({ from: account })
+                    const ethAmountInWei = web3.utils.toWei(ethAmount.toString(), 'ether');
+                    const totalValue = ethAmountInWei;
+
+                    // Estimación de gas
+                    const gasEstimate = await contract.methods.createToken(name, symbol, initialSupply, website, telegram, twitter, additionalLinks, ethAmountInWei).estimateGas({ from: account, value: totalValue });
+
+                    contract.methods.createToken(name, symbol, initialSupply, website, telegram, twitter, additionalLinks, ethAmountInWei)
+                        .send({ from: account, value: totalValue, gas: gasEstimate })
                         .on('receipt', (receipt) => {
                             alert('Token created successfully!');
                             hideCreateTokenModal();
@@ -134,6 +160,10 @@
                                 address: receipt.events.TokenCreated.returnValues.tokenAddress, 
                                 name, 
                                 symbol, 
+                                website, 
+                                telegram, 
+                                twitter, 
+                                additionalLinks, 
                                 lastActivity: Date.now() // Add timestamp to track last activity
                             });
                             renderTokenList();
@@ -151,6 +181,18 @@
             }
         }
 
+        function calculatePercentage() {
+            const initialSupply = parseFloat(document.getElementById('initialSupply').value);
+            const ethAmount = parseFloat(document.getElementById('ethAmount').value);
+
+            if (initialSupply && ethAmount) {
+                const percentage = (ethAmount / initialSupply) * 100;
+                document.getElementById('percentageOutput').textContent = `Percentage of Supply: ${percentage.toFixed(2)}%`;
+            } else {
+                document.getElementById('percentageOutput').textContent = 'Percentage of Supply: 0%';
+            }
+        }
+
         document.getElementById('createTokenForm').addEventListener('submit', handleSubmit);
 
         function renderTokenList() {
@@ -164,6 +206,10 @@
                 tokenItem.className = 'token-item';
                 tokenItem.innerHTML = `
                     <h2>${token.name} (${token.symbol})</h2>
+                    <p>Website: <a href="${token.website}" target="_blank">${token.website}</a></p>
+                    <p>Telegram: <a href="${token.telegram}" target="_blank">${token.telegram}</a></p>
+                    <p>Twitter: <a href="${token.twitter}" target="_blank">${token.twitter}</a></p>
+                    ${token.additionalLinks.map(link => `<p>Link: <a href="${link.trim()}" target="_blank">${link.trim()}</a></p>`).join('')}
                     <button onclick="showTokenDetails('${token.address}')">Details</button>
                 `;
                 tokenList.appendChild(tokenItem);
@@ -178,6 +224,7 @@
         window.showCreateTokenModal = showCreateTokenModal;
         window.hideCreateTokenModal = hideCreateTokenModal;
         window.handleSubmit = handleSubmit;
+        window.calculatePercentage = calculatePercentage;
     </script>
 </body>
 </html>
