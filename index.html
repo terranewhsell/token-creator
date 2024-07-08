@@ -60,6 +60,10 @@
             border: 1px solid #ccc;
             border-radius: 4px;
         }
+        #percentageOutput {
+            font-weight: bold;
+            margin-top: 10px;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
 </head>
@@ -77,14 +81,15 @@
             <input type="text" id="telegram" placeholder="Telegram" />
             <input type="text" id="twitter" placeholder="Twitter" />
             <textarea id="additionalLinks" placeholder="Additional Links (comma separated)"></textarea>
-            <input type="number" id="initialPurchase" placeholder="Initial Purchase" required step="any"/>
+            <input type="number" id="initialPurchase" placeholder="Initial Purchase" required step="any" oninput="calculatePercentage()"/>
+            <div id="percentageOutput">Percentage of Supply: 0%</div>
             <button type="submit">Create Token</button>
             <button type="button" onclick="hideCreateTokenModal()">Cancel</button>
         </form>
     </div>
 
     <script>
-        const contractAddress = '0xAC546C53e5B4ca2c55cfCEC91Be42a641CB63115'; // Reemplaza con la dirección de tu contrato
+        const contractAddress = '0x5437135709C422C1023bAd7db2c67F4Ff0F66780'; // Reemplaza con la dirección de tu contrato
         const contractABI = [
             {
                 "inputs": [
@@ -146,8 +151,7 @@
                     const contract = new web3.eth.Contract(contractABI, contractAddress);
 
                     const initialPurchaseInWei = web3.utils.toWei(initialPurchase.toString(), 'ether');
-                    const tokenCreationFee = web3.utils.toWei('0.001', 'ether');
-                    const totalValue = web3.utils.toWei((initialPurchase + 0.001).toString(), 'ether');
+                    const totalValue = web3.utils.toWei(initialPurchase.toString(), 'ether');
 
                     // Estimación de gas
                     const gasEstimate = await contract.methods.createToken(name, symbol, initialSupply, website, telegram, twitter, additionalLinks, initialPurchaseInWei).estimateGas({ from: account, value: totalValue });
@@ -182,6 +186,18 @@
             }
         }
 
+        function calculatePercentage() {
+            const initialSupply = parseFloat(document.getElementById('initialSupply').value);
+            const initialPurchase = parseFloat(document.getElementById('initialPurchase').value);
+
+            if (initialSupply && initialPurchase) {
+                const percentage = (initialPurchase / initialSupply) * 100;
+                document.getElementById('percentageOutput').textContent = `Percentage of Supply: ${percentage.toFixed(2)}%`;
+            } else {
+                document.getElementById('percentageOutput').textContent = 'Percentage of Supply: 0%';
+            }
+        }
+
         document.getElementById('createTokenForm').addEventListener('submit', handleSubmit);
 
         function renderTokenList() {
@@ -213,6 +229,7 @@
         window.showCreateTokenModal = showCreateTokenModal;
         window.hideCreateTokenModal = hideCreateTokenModal;
         window.handleSubmit = handleSubmit;
+        window.calculatePercentage = calculatePercentage;
     </script>
 </body>
 </html>
