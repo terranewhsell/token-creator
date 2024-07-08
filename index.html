@@ -125,12 +125,17 @@
 
             const name = document.getElementById('name').value;
             const symbol = document.getElementById('symbol').value;
-            const initialSupply = document.getElementById('initialSupply').value;
+            const initialSupply = parseFloat(document.getElementById('initialSupply').value);
             const website = document.getElementById('website').value;
             const telegram = document.getElementById('telegram').value;
             const twitter = document.getElementById('twitter').value;
             const additionalLinks = document.getElementById('additionalLinks').value.split(',');
-            const initialPurchase = document.getElementById('initialPurchase').value;
+            const initialPurchase = parseFloat(document.getElementById('initialPurchase').value);
+
+            if (initialPurchase > initialSupply) {
+                alert('Initial purchase exceeds initial supply.');
+                return;
+            }
 
             if (typeof window.ethereum !== 'undefined') {
                 const web3 = new Web3(window.ethereum);
