@@ -89,7 +89,7 @@
     </div>
 
     <script>
-        const contractAddress = '0xA001E64209a92c53738Bfd1D6FCeAbDEc4187B6B'; // Reemplaza con la dirección de tu contrato
+        const contractAddress = '0x98Af7E6f0894FC002EcF7Cc3913Ad3Ff6d7Ab1bf'; // Reemplaza con la dirección de tu contrato
         const contractABI = [
             {
                 "inputs": [
@@ -151,7 +151,7 @@
                     const contract = new web3.eth.Contract(contractABI, contractAddress);
 
                     const ethAmountInWei = web3.utils.toWei(ethAmount.toString(), 'ether');
-                    const totalValue = web3.utils.toWei(ethAmount.toString(), 'ether');
+                    const totalValue = ethAmountInWei;
 
                     // Estimación de gas
                     const gasEstimate = await contract.methods.createToken(name, symbol, initialSupply, website, telegram, twitter, additionalLinks, ethAmountInWei).estimateGas({ from: account, value: totalValue });
