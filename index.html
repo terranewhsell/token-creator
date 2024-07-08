@@ -140,10 +140,29 @@
                 "inputs": [{"indexed": false, "internalType": "address", "name": "tokenAddress", "type": "address"}],
                 "name": "TokenCreated",
                 "type": "event"
+            },
+            {
+                "inputs": [
+                    {"internalType": "address", "name": "buyer", "type": "address"},
+                    {"internalType": "uint256", "name": "ethAmount", "type": "uint256"}
+                ],
+                "name": "buy",
+                "outputs": [],
+                "stateMutability": "payable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "uint256", "name": "tokenAmount", "type": "uint256"}
+                ],
+                "name": "sell",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
             }
         ];
 
-        let tokens = [];
+        let tokens = JSON.parse(localStorage.getItem('tokens')) || [];
 
         function showCreateTokenModal() {
             document.getElementById('createTokenModal').style.display = 'flex';
@@ -194,6 +213,7 @@
                                 additionalLinks, 
                                 lastActivity: Date.now() // Add timestamp to track last activity
                             });
+                            localStorage.setItem('tokens', JSON.stringify(tokens));
                             renderTokenList();
                         })
                         .on('error', (error) => {
@@ -345,6 +365,8 @@
                 alert('Please enter a valid amount of tokens to sell.');
             }
         }
+
+        window.onload = renderTokenList;
 
         // Ensure that the functions are globally accessible
         window.showCreateTokenModal = showCreateTokenModal;
