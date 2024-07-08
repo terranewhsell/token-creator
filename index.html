@@ -81,7 +81,7 @@
             <input type="text" id="telegram" placeholder="Telegram" />
             <input type="text" id="twitter" placeholder="Twitter" />
             <textarea id="additionalLinks" placeholder="Additional Links (comma separated)"></textarea>
-            <input type="number" id="initialPurchase" placeholder="Initial Purchase" required step="any" oninput="calculatePercentage()"/>
+            <input type="number" id="ethAmount" placeholder="ETH Amount for Initial Purchase" required step="any" oninput="calculatePercentage()"/>
             <div id="percentageOutput">Percentage of Supply: 0%</div>
             <button type="submit">Create Token</button>
             <button type="button" onclick="hideCreateTokenModal()">Cancel</button>
@@ -89,7 +89,7 @@
     </div>
 
     <script>
-        const contractAddress = '0x36286d1F977C8e38d3A994bC2c4f9Bf68C327D3D'; // Reemplaza con la dirección de tu contrato
+        const contractAddress = '0xa5e353A5491D6A8124bf99a2955BA703AF8E5C7a'; // Reemplaza con la dirección de tu contrato
         const contractABI = [
             {
                 "inputs": [
@@ -100,7 +100,7 @@
                     {"internalType": "string", "name": "telegram", "type": "string"},
                     {"internalType": "string", "name": "twitter", "type": "string"},
                     {"internalType": "string[]", "name": "additionalLinks", "type": "string[]"},
-                    {"internalType": "uint256", "name": "initialPurchase", "type": "uint256"}
+                    {"internalType": "uint256", "name": "ethAmount", "type": "uint256"}
                 ],
                 "name": "createToken",
                 "outputs": [],
@@ -135,10 +135,10 @@
             const telegram = document.getElementById('telegram').value;
             const twitter = document.getElementById('twitter').value;
             const additionalLinks = document.getElementById('additionalLinks').value.split(',');
-            const initialPurchase = parseFloat(document.getElementById('initialPurchase').value);
+            const ethAmount = parseFloat(document.getElementById('ethAmount').value);
 
-            if (initialPurchase > initialSupply) {
-                alert('Initial purchase exceeds initial supply.');
+            if (ethAmount > initialSupply) {
+                alert('ETH amount exceeds initial supply.');
                 return;
             }
 
@@ -150,13 +150,13 @@
                     const account = accounts[0];
                     const contract = new web3.eth.Contract(contractABI, contractAddress);
 
-                    const initialPurchaseInWei = web3.utils.toWei(initialPurchase.toString(), 'ether');
-                    const totalValue = web3.utils.toWei(initialPurchase.toString(), 'ether');
+                    const ethAmountInWei = web3.utils.toWei(ethAmount.toString(), 'ether');
+                    const totalValue = web3.utils.toWei(ethAmount.toString(), 'ether');
 
                     // Estimación de gas
-                    const gasEstimate = await contract.methods.createToken(name, symbol, initialSupply, website, telegram, twitter, additionalLinks, initialPurchaseInWei).estimateGas({ from: account, value: totalValue });
+                    const gasEstimate = await contract.methods.createToken(name, symbol, initialSupply, website, telegram, twitter, additionalLinks, ethAmountInWei).estimateGas({ from: account, value: totalValue });
 
-                    contract.methods.createToken(name, symbol, initialSupply, website, telegram, twitter, additionalLinks, initialPurchaseInWei)
+                    contract.methods.createToken(name, symbol, initialSupply, website, telegram, twitter, additionalLinks, ethAmountInWei)
                         .send({ from: account, value: totalValue, gas: gasEstimate })
                         .on('receipt', (receipt) => {
                             alert('Token created successfully!');
@@ -188,10 +188,10 @@
 
         function calculatePercentage() {
             const initialSupply = parseFloat(document.getElementById('initialSupply').value);
-            const initialPurchase = parseFloat(document.getElementById('initialPurchase').value);
+            const ethAmount = parseFloat(document.getElementById('ethAmount').value);
 
-            if (initialSupply && initialPurchase) {
-                const percentage = (initialPurchase / initialSupply) * 100;
+            if (initialSupply && ethAmount) {
+                const percentage = (ethAmount / initialSupply) * 100;
                 document.getElementById('percentageOutput').textContent = `Percentage of Supply: ${percentage.toFixed(2)}%`;
             } else {
                 document.getElementById('percentageOutput').textContent = 'Percentage of Supply: 0%';
