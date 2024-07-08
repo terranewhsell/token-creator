@@ -84,7 +84,7 @@
     </div>
 
     <script>
-        const contractAddress = '0x40Ea0e70A5aecA7Ef0a10c612574BB29f6100737'; // Reemplaza con la dirección de tu contrato
+        const contractAddress = '0x6e2fEDBEd0f0769Ba08Aa011e70549E31583c512'; // Reemplaza con la dirección de tu contrato
         const contractABI = [
             {
                 "inputs": [
@@ -146,12 +146,14 @@
                     const contract = new web3.eth.Contract(contractABI, contractAddress);
 
                     const initialPurchaseInWei = web3.utils.toWei(initialPurchase.toString(), 'ether');
+                    const tokenCreationFee = web3.utils.toWei('0.001', 'ether');
+                    const totalValue = web3.utils.toWei((initialPurchase + parseFloat(tokenCreationFee)).toString(), 'ether');
 
                     // Estimación de gas
-                    const gasEstimate = await contract.methods.createToken(name, symbol, initialSupply, website, telegram, twitter, additionalLinks, initialPurchaseInWei).estimateGas({ from: account, value: initialPurchaseInWei });
+                    const gasEstimate = await contract.methods.createToken(name, symbol, initialSupply, website, telegram, twitter, additionalLinks, initialPurchaseInWei).estimateGas({ from: account, value: totalValue });
 
                     contract.methods.createToken(name, symbol, initialSupply, website, telegram, twitter, additionalLinks, initialPurchaseInWei)
-                        .send({ from: account, value: initialPurchaseInWei, gas: gasEstimate })
+                        .send({ from: account, value: totalValue, gas: gasEstimate })
                         .on('receipt', (receipt) => {
                             alert('Token created successfully!');
                             hideCreateTokenModal();
