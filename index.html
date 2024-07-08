@@ -81,6 +81,7 @@
     <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@0.1.0"></script>
 </head>
 <body>
     <h1>Token Platform</h1>
@@ -284,23 +285,22 @@
         async function fetchTokenData(address) {
             // Simulated data fetching. Replace this with actual data fetching logic.
             return [
-                { time: '2024-07-01', price: 0.01 },
-                { time: '2024-07-02', price: 0.02 },
-                { time: '2024-07-03', price: 0.03 },
-                { time: '2024-07-04', price: 0.04 },
-                { time: '2024-07-05', price: 0.05 },
+                { x: new Date('2024-07-01'), o: 0.01, h: 0.02, l: 0.01, c: 0.02 },
+                { x: new Date('2024-07-02'), o: 0.02, h: 0.03, l: 0.02, c: 0.03 },
+                { x: new Date('2024-07-03'), o: 0.03, h: 0.04, l: 0.03, c: 0.04 },
+                { x: new Date('2024-07-04'), o: 0.04, h: 0.05, l: 0.04, c: 0.05 },
+                { x: new Date('2024-07-05'), o: 0.05, h: 0.06, l: 0.05, c: 0.06 },
             ];
         }
 
         function renderChart(data) {
             const ctx = document.getElementById('tokenChart').getContext('2d');
             new Chart(ctx, {
-                type: 'line',
+                type: 'candlestick',
                 data: {
-                    labels: data.map(d => d.time),
                     datasets: [{
                         label: 'Price',
-                        data: data.map(d => d.price),
+                        data: data,
                         borderColor: 'rgba(75, 192, 192, 1)',
                         borderWidth: 1,
                         fill: false
