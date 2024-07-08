@@ -64,8 +64,22 @@
             font-weight: bold;
             margin-top: 10px;
         }
+        #tokenDetails {
+            display: none;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: 20px auto;
+        }
+        #tokenChart {
+            width: 100%;
+            height: 300px;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <h1>Token Platform</h1>
@@ -88,8 +102,22 @@
         </form>
     </div>
 
+    <div id="tokenDetails">
+        <h2 id="tokenName"></h2>
+        <p id="tokenWebsite"></p>
+        <p id="tokenTelegram"></p>
+        <p id="tokenTwitter"></p>
+        <div id="tokenLinks"></div>
+        <canvas id="tokenChart"></canvas>
+        <input type="number" id="buyAmount" placeholder="ETH Amount" step="any"/>
+        <button onclick="buyToken()">Buy</button>
+        <input type="number" id="sellAmount" placeholder="Token Amount" step="any"/>
+        <button onclick="sellToken()">Sell</button>
+        <button onclick="hideTokenDetails()">Close</button>
+    </div>
+
     <script>
-        const contractAddress = '0xcdeA88f90E1C938Adbf8f44a282f2c14E3a967f4'; // Reemplaza con la dirección de tu contrato
+        const contractAddress = '0x65bFc412F32bE2aD204E1634da57b222298D575C'; // Reemplaza con la dirección de tu contrato
         const contractABI = [
             {
                 "inputs": [
@@ -210,14 +238,112 @@
                     <p>Telegram: <a href="${token.telegram}" target="_blank">${token.telegram}</a></p>
                     <p>Twitter: <a href="${token.twitter}" target="_blank">${token.twitter}</a></p>
                     ${token.additionalLinks.map(link => `<p>Link: <a href="${link.trim()}" target="_blank">${link.trim()}</a></p>`).join('')}
-                    <button onclick="showTokenDetails('${token.address}')">Details</button>
+                    <button onclick="showTokenDetails('${token.address}', '${token.name}', '${token.website}', '${token.telegram}', '${token.twitter}', '${token.additionalLinks.join(',')}')">Details</button>
                 `;
                 tokenList.appendChild(tokenItem);
             });
         }
 
-        function showTokenDetails(address) {
-            alert('Token details for: ' + address);
+        async function showTokenDetails(address, name, website, telegram, twitter, additionalLinks) {
+            document.getElementById('tokenName').innerText = `${name} Details`;
+            document.getElementById('tokenWebsite').innerHTML = `Website: <a href="${website}" target="_blank">${website}</a>`;
+            document.getElementById('tokenTelegram').innerHTML = `Telegram: <a href="${telegram}" target="_blank">${telegram}</a>`;
+            document.getElementById('tokenTwitter').innerHTML = `Twitter: <a href="${twitter}" target="_blank">${twitter}</a>`;
+            document.getElementById('tokenLinks').innerHTML = additionalLinks.split(',').map(link => `<p>Link: <a href="${link.trim()}" target="_blank">${link.trim()}</a></p>`).join('');
+            document.getElementById('tokenDetails').style.display = 'block';
+
+            const tokenData = await fetchTokenData(address);
+            renderChart(tokenData);
+        }
+
+        function hideTokenDetails() {
+            document.getElementById('tokenDetails').style.display = 'none';
+        }
+
+        async function fetchTokenData(address) {
+            // Simulated data fetching. Replace this with actual data fetching logic.
+            return [
+                { time: '2024-07-01', price: 0.01 },
+                { time: '2024-07-02', price: 0.02 },
+                { time: '2024-07-03', price: 0.03 },
+                { time: '2024-07-04', price: 0.04 },
+                { time: '2024-07-05', price: 0.05 },
+            ];
+        }
+
+        function renderChart(data) {
+            const ctx = document.getElementById('tokenChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.time),
+                    datasets: [{
+                        label: 'Price',
+                        data: data.map(d => d.price),
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1,
+                        fill: false
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'day'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        async function buyToken() {
+            const buyAmount = parseFloat(document.getElementById('buyAmount').value);
+            if (buyAmount && buyAmount > 0) {
+                const web3 = new Web3(window.ethereum);
+                const accounts = await web3.eth.getAccounts();
+                const account = accounts[0];
+                const contract = new web3.eth.Contract(contractABI, contractAddress);
+                const ethAmountInWei = web3.utils.toWei(buyAmount.toString(), 'ether');
+
+                contract.methods.buy(account, ethAmountInWei).send({ from: account, value: ethAmountInWei })
+                    .on('receipt', (receipt) => {
+                        alert('Tokens purchased successfully!');
+                        hideTokenDetails();
+                    })
+                    .on('error', (error) => {
+                        console.error(error);
+                        alert('An error occurred while purchasing tokens.');
+                    });
+            } else {
+                alert('Please enter a valid amount of ETH to buy tokens.');
+            }
+        }
+
+        async function sellToken() {
+            const sellAmount = parseFloat(document.getElementById('sellAmount').value);
+            if (sellAmount && sellAmount > 0) {
+                const web3 = new Web3(window.ethereum);
+                const accounts = await web3.eth.getAccounts();
+                const account = accounts[0];
+                const contract = new web3.eth.Contract(contractABI, contractAddress);
+
+                contract.methods.sell(web3.utils.toWei(sellAmount.toString(), 'ether')).send({ from: account })
+                    .on('receipt', (receipt) => {
+                        alert('Tokens sold successfully!');
+                        hideTokenDetails();
+                    })
+                    .on('error', (error) => {
+                        console.error(error);
+                        alert('An error occurred while selling tokens.');
+                    });
+            } else {
+                alert('Please enter a valid amount of tokens to sell.');
+            }
         }
 
         // Ensure that the functions are globally accessible
@@ -225,6 +351,10 @@
         window.hideCreateTokenModal = hideCreateTokenModal;
         window.handleSubmit = handleSubmit;
         window.calculatePercentage = calculatePercentage;
+        window.showTokenDetails = showTokenDetails;
+        window.hideTokenDetails = hideTokenDetails;
+        window.buyToken = buyToken;
+        window.sellToken = sellToken;
     </script>
 </body>
 </html>
