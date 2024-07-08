@@ -165,6 +165,7 @@
         ];
 
         let tokens = JSON.parse(localStorage.getItem('tokens')) || [];
+        let chartInstance;
 
         function showCreateTokenModal() {
             document.getElementById('createTokenModal').style.display = 'flex';
@@ -295,7 +296,10 @@
 
         function renderChart(data) {
             const ctx = document.getElementById('tokenChart').getContext('2d');
-            new Chart(ctx, {
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+            chartInstance = new Chart(ctx, {
                 type: 'candlestick',
                 data: {
                     datasets: [{
